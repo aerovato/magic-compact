@@ -1,6 +1,6 @@
 {
   "name": "magic-compact",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Lossless context compression plugin for OpenCode.",
   "type": "module",
   "module": "src/index.ts",

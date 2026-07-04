@@ -1,6 +1,6 @@
 {
   "name": "magic-compact",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Lossless context compression plugin for OpenCode.",
   "type": "module",
   "module": "src/index.ts",
@@ -22,7 +22,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "release": "sh scripts/release.sh"
   },
   "keywords": [
     "opencode",

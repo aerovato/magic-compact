@@ -4,14 +4,8 @@
   "workspaces": {
     "": {
       "name": "magic-compact",
-      "dependencies": {
-        "@opencode-ai/sdk": "^1.17.9",
-        "gpt-tokenizer": "^3.4.0",
-        "zod": "^4.4.3",
-      },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
-        "@opencode-ai/plugin": "^1.17.9",
         "@types/bun": "latest",
         "eslint": "^10.5.0",
         "eslint-config-prettier": "^10.1.8",
@@ -19,6 +13,23 @@
         "prettier": "^3.8.4",
         "typescript": "^5",
         "typescript-eslint": "^8.61.1",
+      },
+    },
+    "packages/claude-code-plugin": {
+      "name": "@magic-compact/claude-code-plugin",
+      "version": "1.0.0",
+    },
+    "packages/common": {
+      "name": "@magic-compact/common",
+      "version": "1.0.0",
+    },
+    "packages/opencode-plugin": {
+      "name": "magic-compact",
+      "version": "1.0.0",
+      "dependencies": {
+        "@opencode-ai/sdk": "^1.17.9",
+        "gpt-tokenizer": "^3.4.0",
+        "zod": "^4.4.3",
       },
       "peerDependencies": {
         "@opencode-ai/plugin": ">=1.17.9",
@@ -51,6 +62,10 @@
     "@humanwhocodes/module-importer": ["@humanwhocodes/module-importer@1.0.1", "", {}, "sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA=="],
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
+
+    "@magic-compact/claude-code-plugin": ["@magic-compact/claude-code-plugin@workspace:packages/claude-code-plugin"],
+
+    "@magic-compact/common": ["@magic-compact/common@workspace:packages/common"],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ=="],
 
@@ -193,6 +208,8 @@
     "levn": ["levn@0.4.1", "", { "dependencies": { "prelude-ls": "^1.2.1", "type-check": "~0.4.0" } }, "sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ=="],
 
     "locate-path": ["locate-path@6.0.0", "", { "dependencies": { "p-locate": "^5.0.0" } }, "sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw=="],
+
+    "magic-compact": ["magic-compact@workspace:packages/opencode-plugin"],
 
     "minimatch": ["minimatch@10.2.5", "", { "dependencies": { "brace-expansion": "^5.0.5" } }, "sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg=="],
 

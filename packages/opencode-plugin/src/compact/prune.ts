@@ -1,9 +1,6 @@
 import type { Part, ToolPart } from "@opencode-ai/sdk/v2";
 import { unwrap, type V2Client } from "../api";
-import {
-  inputOmissionNotice,
-  outputOmissionNotice,
-} from "./constants";
+import { inputOmissionNotice, outputOmissionNotice } from "./constants";
 import type { MessageWithParts, Turn } from "./plan";
 import { allocateOmission } from "../storage/omission";
 import { isRecord, unwrapString } from "../util";
@@ -18,6 +15,10 @@ const DEFAULT_OUTPUT_DESCRIPTION =
 
 const DEFAULT_LIMIT = { words: 128, chars: 1024 };
 const TASK_OUTPUT_LIMIT = { words: 512, chars: 4096 };
+// webfetch frequently returns large HTML/markdown pages — always omit with cache
+const WEBFETCH_LIMIT = { words: 64, chars: 512 };
+// glob/grep outputs are file lists / search results — compact aggressively
+const SEARCH_LIMIT = { words: 64, chars: 512 };
 
 export async function pruneSummarizedTurns(
   context: PruneContext,
@@ -243,6 +244,52 @@ async function applyOutputOmissions(
       });
       part.state.output = outputOmissionNotice(
         "Task output omitted due to a compaction operation. If necessary, reread output via read_omitted_content tool.",
+        output.length,
+        contentID,
+      );
+    }
+    return;
+  }
+
+  // webfetch: HTML/markdown pages are large and stale — always omit above threshold.
+  // The URL is preserved in the tool input so the agent can re-fetch if needed.
+  if (part.tool === "webfetch" || part.tool === "mcp_Webfetch") {
+    if (exceeds(output, WEBFETCH_LIMIT)) {
+      const contentID = await allocateOmission(context.sessionID, {
+        content: output,
+      });
+      part.state.output = outputOmissionNotice(
+        "Web page contents omitted due to compaction operation. Re-fetch the URL from tool input if current contents are needed.",
+        output.length,
+        contentID,
+      );
+    }
+    return;
+  }
+
+  // glob: file listing results are reproducible — omit above threshold.
+  if (part.tool === "glob" || part.tool === "mcp_Glob") {
+    if (exceeds(output, SEARCH_LIMIT)) {
+      const contentID = await allocateOmission(context.sessionID, {
+        content: output,
+      });
+      part.state.output = outputOmissionNotice(
+        "Glob file listing omitted due to compaction operation. Re-run glob with the same pattern to reproduce.",
+        output.length,
+        contentID,
+      );
+    }
+    return;
+  }
+
+  // grep: search results are reproducible — omit above threshold.
+  if (part.tool === "grep" || part.tool === "mcp_Grep") {
+    if (exceeds(output, SEARCH_LIMIT)) {
+      const contentID = await allocateOmission(context.sessionID, {
+        content: output,
+      });
+      part.state.output = outputOmissionNotice(
+        "Grep search results omitted due to compaction operation. Re-run grep with the same pattern to reproduce.",
         output.length,
         contentID,
       );

@@ -150,13 +150,40 @@ function buildActiveChain(rows: TranscriptRow[]): TranscriptRow[] {
       .map(row => row.parentUuid)
       .filter((uuid): uuid is string => uuid !== null),
   );
-  const leaf = [...rows]
-    .reverse()
-    .find(
-      row =>
-        (row.type === "user" || row.type === "assistant")
-        && !parentUuids.has(row.uuid),
-    );
+  const terminalRows = rows.filter(row => !parentUuids.has(row.uuid));
+  const hasUserAssistantChild = new Set<string>();
+  for (const row of rows) {
+    if (
+      row.parentUuid !== null
+      && (row.type === "user" || row.type === "assistant")
+    ) {
+      hasUserAssistantChild.add(row.parentUuid);
+    }
+  }
+
+  let leaf: TranscriptRow | undefined;
+  for (const terminal of terminalRows) {
+    const seen = new Set<string>();
+    let current: TranscriptRow | undefined = terminal;
+    while (current) {
+      if (seen.has(current.uuid)) {
+        throw new Error("Cycle detected in transcript parentUuid chain.");
+      }
+      seen.add(current.uuid);
+      if (current.type === "user" || current.type === "assistant") {
+        if (
+          !hasUserAssistantChild.has(current.uuid)
+          && (!leaf || current.timestamp.localeCompare(leaf.timestamp) > 0)
+        ) {
+          leaf = current;
+        }
+        break;
+      }
+      current = current.parentUuid
+        ? rowsByUuid.get(current.parentUuid)
+        : undefined;
+    }
+  }
   if (!leaf) {
     return [];
   }

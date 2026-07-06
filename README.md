@@ -113,6 +113,20 @@ Magic Compact Offers:
 
 If you want model-driven compaction with increased cache invalidations and token burn, consider using DCP instead.
 
+## Vs Magic Context
+
+Magic Context is a much broader runtime context-management system: it runs background historian and dreamer processes, maintains project memory, and injects recalled memories and history back into the prompt on an ongoing basis. That makes it powerful, but also much heavier in tokens and cache churn.
+
+Magic Compact Offers:
+
+- Efficiency — One explicit compaction command, no background summarization loop, no always-on memory RAG, and no recurring prompt injections.
+- Lower token burn — Context reduction happens once on demand instead of continuously consuming tokens across every turn.
+- Fewer cache invalidations — The session is rewritten once, then stays stable, instead of repeatedly re-rendering volatile background state.
+- Lossless conversation shape — User messages stay verbatim, tool structure is preserved, and summarized assistant turns remain retrievable.
+- Focused compaction — The plugin does one job: compress the conversation without turning the runtime into a memory subsystem.
+
+If you want a lightweight, user-driven compaction tool with minimal ongoing overhead, Magic Compact is the better fit. If you want a full long-term memory system with background maintenance, Magic Context is the heavier alternative.
+
 ## Development
 
 ```bash

@@ -78,7 +78,7 @@ async function generateSummaries(
 
   try {
     const summaryProcess = Bun.spawn(
-      ["claude", "-p", "--resume", analysis.sessionId, prompt],
+      ["claude", "-p", "--resume", analysis.transcriptPath, prompt],
       {
         stdout: "pipe",
         stderr: "pipe",

@@ -11,6 +11,9 @@
       "import": "./src/index.ts"
     }
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.21.3"
+  },
   "files": [
     "src"
   ]

@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 
@@ -39,12 +39,30 @@ export async function saveOmissionCache(
 
 export function allocateOmission(
   cache: OmissionCache,
+  sessionId: string,
   content: string,
 ): string {
-  const contentId = `omitted-${cache.nextId.toString().padStart(3, "0")}`;
+  const contentId = `${sessionId.slice(-12)}:omitted-${cache.nextId.toString().padStart(3, "0")}`;
   cache.nextId += 1;
   cache.entries[contentId] = { content };
   return contentId;
+}
+
+export async function readOmittedContent(
+  contentId: string,
+): Promise<string | null> {
+  const [sessionSuffix] = contentId.split(":", 1);
+  if (!sessionSuffix || sessionSuffix.length !== 12) {
+    return null;
+  }
+
+  const sessionId = await findSessionIdBySuffix(sessionSuffix);
+  if (!sessionId) {
+    return null;
+  }
+
+  const cache = await loadOmissionCache(sessionId);
+  return cache.entries[contentId]?.content ?? null;
 }
 
 export function inputOmissionNotice(
@@ -73,9 +91,30 @@ Content ID: ${contentId}
 </tool-output-omission-notice>`;
 }
 
+async function findSessionIdBySuffix(suffix: string): Promise<string | null> {
+  const directory = cacheDirectory();
+
+  try {
+    const entries = await readdir(directory);
+    for (const entry of entries) {
+      if (entry === `${suffix}.json` || entry.endsWith(`${suffix}.json`)) {
+        return entry.slice(0, -".json".length);
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function cachePath(sessionId: string): string {
+  return `${cacheDirectory()}/${sessionId}.json`;
+}
+
+function cacheDirectory(): string {
   const base = Bun.env.XDG_DATA_HOME ?? `${homedir()}/.local/share`;
-  return `${base}/claude-code/storage/magic-compact/${sessionId}.json`;
+  return `${base}/claude-code/storage/magic-compact`;
 }
 
 function createEmptyCache(): OmissionCache {

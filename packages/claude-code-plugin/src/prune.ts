@@ -9,6 +9,7 @@ type OmissionCache = Parameters<typeof allocateOmission>[0];
 
 type ToolContext = {
   cache: OmissionCache;
+  sessionId: string;
   completedToolUseIds: Set<string>;
   toolNamesById: Map<string, string>;
 };
@@ -64,7 +65,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
   }
 
   if (toolName === "Bash") {
-    truncateBashCommand(input, context.cache);
+    truncateBashCommand(input, context.cache, context.sessionId);
     return;
   }
 
@@ -74,6 +75,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "content",
       "File write contents omitted due to a compaction operation. If necessary, reread file to see current contents.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -85,6 +87,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "new_string",
       "File edit old_string and new_string omitted due to compaction operation. If necessary, reread file to see current contents.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -95,6 +98,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "new_source",
       "Notebook edit source omitted due to compaction operation. If necessary, reread notebook to see current contents.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -105,6 +109,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "prompt",
       "Agent prompt omitted due to compaction operation.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -115,6 +120,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "script",
       "Workflow script omitted due to compaction operation.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -125,6 +131,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "message",
       "Inter-agent message omitted due to compaction operation.",
       context.cache,
+      context.sessionId,
     );
     return;
   }
@@ -135,6 +142,7 @@ function pruneToolInput(block: JsonRecord, context: ToolContext): void {
       "findings",
       "Report findings omitted due to compaction operation.",
       context.cache,
+      context.sessionId,
     );
   }
 }
@@ -163,7 +171,11 @@ function pruneToolOutput(block: JsonRecord, context: ToolContext): void {
   }
 
   if (toolName === "Read") {
-    const contentId = allocateOmission(context.cache, content);
+    const contentId = allocateOmission(
+      context.cache,
+      context.sessionId,
+      content,
+    );
     block["content"] = outputOmissionNotice(
       "Stale read contents omitted due to compaction operation. If necessary, reread to see current contents.",
       content.length,
@@ -173,7 +185,11 @@ function pruneToolOutput(block: JsonRecord, context: ToolContext): void {
   }
 
   if (toolName === "NotebookEdit") {
-    const contentId = allocateOmission(context.cache, content);
+    const contentId = allocateOmission(
+      context.cache,
+      context.sessionId,
+      content,
+    );
     block["content"] = outputOmissionNotice(
       "Notebook edit output omitted due to compaction operation. If necessary, reread notebook to see current contents.",
       content.length,
@@ -190,7 +206,7 @@ function pruneToolOutput(block: JsonRecord, context: ToolContext): void {
     return;
   }
 
-  const contentId = allocateOmission(context.cache, content);
+  const contentId = allocateOmission(context.cache, context.sessionId, content);
   block["content"] = outputOmissionNotice(
     DEFAULT_OUTPUT_DESCRIPTION,
     content.length,
@@ -203,13 +219,14 @@ function omitField(
   field: string,
   description: string,
   cache: OmissionCache,
+  sessionId: string,
 ): void {
   const content = stringifyContent(input[field]);
   if (!content || !exceeds(content, DEFAULT_LIMIT)) {
     return;
   }
 
-  const contentId = allocateOmission(cache, content);
+  const contentId = allocateOmission(cache, sessionId, content);
   input[field] = "[Omitted]";
   input[`${field}_omission_notice`] = inputOmissionNotice(
     description,
@@ -224,6 +241,7 @@ function omitCombinedFields(
   secondField: string,
   description: string,
   cache: OmissionCache,
+  sessionId: string,
 ): void {
   const first = stringifyContent(input[firstField]);
   const second = stringifyContent(input[secondField]);
@@ -232,7 +250,7 @@ function omitCombinedFields(
     return;
   }
 
-  const contentId = allocateOmission(cache, combined);
+  const contentId = allocateOmission(cache, sessionId, combined);
   input[firstField] = "[Omitted]";
   input[secondField] = "[Omitted]";
   input[`${firstField}_${secondField}_omission_notice`] = inputOmissionNotice(
@@ -242,13 +260,17 @@ function omitCombinedFields(
   );
 }
 
-function truncateBashCommand(input: JsonRecord, cache: OmissionCache): void {
+function truncateBashCommand(
+  input: JsonRecord,
+  cache: OmissionCache,
+  sessionId: string,
+): void {
   const command = stringifyContent(input["command"]);
   if (command.length <= 1024) {
     return;
   }
 
-  const contentId = allocateOmission(cache, command);
+  const contentId = allocateOmission(cache, sessionId, command);
   input["command"] = `${command.slice(0, 512)}\n[REST OF COMMAND TRUNCATED]`;
   input["command_omission_notice"] = inputOmissionNotice(
     "Bash command truncated due to compaction operation.",

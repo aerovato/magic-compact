@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "magic-compact": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp.ts"]
+    }
+  }
+}

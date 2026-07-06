@@ -194,6 +194,7 @@ async function buildCompactedRows(
       keepOnlyToolBlocks(copiedToolRow);
       pruneTranscriptRow(copiedToolRow, {
         cache: omissionCache,
+        sessionId,
         completedToolUseIds,
         toolNamesById,
       });

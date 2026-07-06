@@ -113,8 +113,7 @@ function cachePath(sessionId: string): string {
 }
 
 function cacheDirectory(): string {
-  const base = Bun.env.XDG_DATA_HOME ?? `${homedir()}/.local/share`;
-  return `${base}/claude-code/storage/magic-compact`;
+  return `${homedir()}/.claude/magic-compact`;
 }
 
 function createEmptyCache(): OmissionCache {

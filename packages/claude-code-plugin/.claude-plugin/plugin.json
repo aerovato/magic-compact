@@ -1,0 +1,5 @@
+{
+  "name": "magic-compact",
+  "version": "1.0.0",
+  "description": "Lossless context compression for Claude Code."
+}

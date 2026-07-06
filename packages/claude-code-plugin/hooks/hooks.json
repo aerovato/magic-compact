@@ -1,0 +1,18 @@
+{
+  "description": "Intercepts /magic-compact and creates a copy-on-write destination session.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "^/magic-compact(?::magic-compact)?(?:\\s+.*)?$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ${CLAUDE_PLUGIN_ROOT}/src/hook.ts",
+            "timeout": 30,
+            "statusMessage": "Running Magic Compact"
+          }
+        ]
+      }
+    ]
+  }
+}

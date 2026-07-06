@@ -1,0 +1,14 @@
+{
+  "name": "magic-compact-local",
+  "owner": {
+    "name": "local"
+  },
+  "plugins": [
+    {
+      "name": "magic-compact",
+      "source": "./packages/claude-code-plugin",
+      "description": "Local Magic Compact development plugin",
+      "version": "dev"
+    }
+  ]
+}

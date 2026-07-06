@@ -1,7 +1,7 @@
 import { unlink } from "node:fs/promises";
 import { compactTranscript } from "./compact";
 import { parseHookInput, parseMagicCompactCommand } from "./command";
-import { copyTranscriptToNewSession } from "./transcript";
+import { createTranscriptSession } from "./transcript";
 
 type HookOutput = {
   continue?: false;
@@ -18,8 +18,9 @@ async function main(): Promise<void> {
       return;
     }
 
-    const destination = await copyTranscriptToNewSession(input.transcript_path);
+    const destination = await createTranscriptSession(input.transcript_path);
     const compacted = await compactTranscript(
+      input.transcript_path,
       destination.transcriptPath,
       destination.sessionId,
       keepTurns,

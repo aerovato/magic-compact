@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFile, unlink } from "node:fs/promises";
+import { unlink } from "node:fs/promises";
 import { loadOmissionCache, saveOmissionCache } from "./omission";
 import { pruneTranscriptRow } from "./prune";
 import {
@@ -7,8 +7,10 @@ import {
   copyTranscriptToNewSession,
   isRecord,
   readActiveTranscriptRows,
+  readPreservedMetadataEntries,
   type Turn,
   type TranscriptRow,
+  writeTranscriptEntries,
 } from "./transcript";
 
 type Plan = {
@@ -19,26 +21,32 @@ type Plan = {
 };
 
 export async function compactTranscript(
-  transcriptPath: string,
+  sourceTranscriptPath: string,
+  destinationTranscriptPath: string,
   sessionId: string,
   keepTurns: number,
 ): Promise<boolean> {
-  const rows = await readActiveTranscriptRows(transcriptPath);
+  const rows = await readActiveTranscriptRows(sourceTranscriptPath);
   const plan = createPlan(rows, keepTurns);
   if (plan.summarizedTurns.length === 0) {
     return false;
   }
 
   const summaries = await generateSummaries(
-    transcriptPath,
+    sourceTranscriptPath,
     plan.summarizedTurns,
     plan.preservedTurns[0] ?? null,
   );
   const compactedRows = await buildCompactedRows(plan, summaries, sessionId);
-  await appendFile(
-    transcriptPath,
-    `${compactedRows.map(row => JSON.stringify(row)).join("\n")}\n`,
+  const metadataEntries = await readPreservedMetadataEntries(
+    sourceTranscriptPath,
+    plan.baseRow.sessionId,
+    sessionId,
   );
+  await writeTranscriptEntries(destinationTranscriptPath, [
+    ...metadataEntries,
+    ...compactedRows,
+  ]);
   return true;
 }
 

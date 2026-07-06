@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { copyFile, readFile } from "node:fs/promises";
+import { access, copyFile, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export type JsonRecord = Record<string, unknown>;
@@ -39,39 +39,70 @@ export async function readActiveTranscriptRows(
 export async function copyTranscriptToNewSession(
   sourceTranscriptPath: string,
 ): Promise<TranscriptCopy> {
+  const destination = await createTranscriptSession(sourceTranscriptPath);
+  await copyFile(
+    sourceTranscriptPath,
+    destination.transcriptPath,
+    constants.COPYFILE_EXCL,
+  );
+  return destination;
+}
+
+export async function createTranscriptSession(
+  sourceTranscriptPath: string,
+): Promise<TranscriptCopy> {
   for (let attempt = 0; attempt < 5; attempt++) {
     const sessionId = randomUUID();
     const transcriptPath = join(
       dirname(sourceTranscriptPath),
       `${sessionId}.jsonl`,
     );
+
     try {
-      await copyFile(
-        sourceTranscriptPath,
-        transcriptPath,
-        constants.COPYFILE_EXCL,
-      );
-      return { sessionId, transcriptPath };
+      await access(transcriptPath, constants.F_OK);
     } catch (error) {
-      if (isRecord(error) && error["code"] === "EEXIST") {
-        continue;
+      if (isRecord(error) && error["code"] === "ENOENT") {
+        return { sessionId, transcriptPath };
       }
+
       throw error;
     }
   }
 
-  throw new Error("Unable to create a unique transcript copy.");
+  throw new Error("Unable to create a unique transcript session.");
+}
+
+export async function readPreservedMetadataEntries(
+  transcriptPath: string,
+  sourceSessionId: string,
+  destinationSessionId: string,
+): Promise<JsonRecord[]> {
+  const entries = await readTranscriptEntries(transcriptPath);
+  return entries
+    .filter(
+      (entry): entry is JsonRecord =>
+        isRecord(entry)
+        && !isTranscriptRow(entry)
+        && isPreservedMetadataEntry(entry),
+    )
+    .map(entry => rewriteSessionMetadata(entry, sourceSessionId, destinationSessionId));
+}
+
+export async function writeTranscriptEntries(
+  transcriptPath: string,
+  entries: JsonRecord[],
+): Promise<void> {
+  await Bun.write(
+    transcriptPath,
+    `${entries.map(entry => JSON.stringify(entry)).join("\n")}\n`,
+  );
 }
 
 export async function readTranscriptRows(
   transcriptPath: string,
 ): Promise<TranscriptRow[]> {
-  const content = await readFile(transcriptPath, "utf8");
-  return content
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .map(line => JSON.parse(line) as unknown)
-    .filter(isTranscriptRow);
+  const entries = await readTranscriptEntries(transcriptPath);
+  return entries.filter(isTranscriptRow);
 }
 
 export function isRecord(value: unknown): value is JsonRecord {
@@ -236,3 +267,44 @@ function isTranscriptRow(value: unknown): value is TranscriptRow {
       || value["type"] === "system")
   );
 }
+
+async function readTranscriptEntries(
+  transcriptPath: string,
+): Promise<unknown[]> {
+  const content = await readFile(transcriptPath, "utf8");
+  return content
+    .split("\n")
+    .filter(line => line.trim() !== "")
+    .map(line => JSON.parse(line) as unknown);
+}
+
+function isPreservedMetadataEntry(entry: JsonRecord): boolean {
+  return PRESERVED_METADATA_TYPES.has(String(entry["type"]));
+}
+
+function rewriteSessionMetadata(
+  entry: JsonRecord,
+  sourceSessionId: string,
+  destinationSessionId: string,
+): JsonRecord {
+  const copied = structuredClone(entry) as JsonRecord;
+  if (copied["sessionId"] === sourceSessionId) {
+    copied["sessionId"] = destinationSessionId;
+  }
+  return copied;
+}
+
+const PRESERVED_METADATA_TYPES = new Set([
+  "custom-title",
+  "ai-title",
+  "last-prompt",
+  "tag",
+  "agent-name",
+  "agent-color",
+  "agent-setting",
+  "mode",
+  "worktree-state",
+  "pr-link",
+  "task-summary",
+  "permission-mode",
+]);

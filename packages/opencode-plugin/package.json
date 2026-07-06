@@ -9,6 +9,9 @@
     ".": {
       "import": "./src/index.ts"
     },
+    "./tui": {
+      "import": "./src/tui.ts"
+    },
     "./server": {
       "import": "./src/index.ts"
     }

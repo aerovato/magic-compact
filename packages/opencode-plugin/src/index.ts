@@ -19,12 +19,11 @@ const server: Plugin = async input => {
       config.command ??= {};
       config.command[COMPACT_COMMAND] = {
         template: "",
-        description:
-          "Lossless context compression for OpenCode. Maximum savings with minimum quality loss.",
+        description: "Lossless context compression",
       };
       config.command[STATS_COMMAND] = {
         template: "",
-        description: "Show Magic Compact token and cost savings stats.",
+        description: "Show Magic Compact token and cost savings stats",
       };
     },
     "command.execute.before": async command => {

@@ -20,6 +20,10 @@ type Plan = {
   baseRow: TranscriptRow;
 };
 
+const POST_COMPACTION_NOTICE = `<post-compaction-notice>
+A compaction operation has just been applied to all messages above. You may have to reread certain files to regain context. Certain historical tool input/output may have been omitted due to length. If the exact I/O of the tool call needs to be retrieved and functionality cannot be replicated via a new tool call, call the read_omitted_content tool with the appropriate Content ID to reread the tool I/O content.
+</post-compaction-notice>`;
+
 export async function compactTranscript(
   sourceTranscriptPath: string,
   destinationTranscriptPath: string,
@@ -129,19 +133,18 @@ async function buildCompactedRows(
   const boundaryUuid = randomUUID();
   rows.push({
     ...copySessionFields(plan.baseRow, sessionId, timestamp),
-    type: "system",
-    subtype: "compact_boundary",
-    content: "Conversation compacted",
-    level: "info",
-    isMeta: false,
+    type: "user",
     uuid: boundaryUuid,
     parentUuid: null,
+    isMeta: true,
+    message: {
+      id: `msg_${randomUUID()}`,
+      role: "user",
+      content: POST_COMPACTION_NOTICE,
+    },
     logicalParentUuid: lastOriginalRow.uuid,
-    compactMetadata: {
-      trigger: "manual",
-      preTokens: 0,
-      messagesSummarized: plan.summarizedTurns.flatMap(turn => turn.rows)
-        .length,
+    magicCompact: {
+      boundary: true,
     },
   });
   let parentUuid: string | null = boundaryUuid;

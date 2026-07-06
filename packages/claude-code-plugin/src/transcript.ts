@@ -85,7 +85,9 @@ export async function readPreservedMetadataEntries(
         && !isTranscriptRow(entry)
         && isPreservedMetadataEntry(entry),
     )
-    .map(entry => rewriteSessionMetadata(entry, sourceSessionId, destinationSessionId));
+    .map(entry =>
+      rewriteSessionMetadata(entry, sourceSessionId, destinationSessionId),
+    );
 }
 
 export async function writeTranscriptEntries(
@@ -233,7 +235,8 @@ function compareByTimestamp(a: TranscriptRow, b: TranscriptRow): number {
 }
 
 function isCompactBoundary(row: TranscriptRow): boolean {
-  return row.type === "system" && row.subtype === "compact_boundary";
+  const magicCompact = row["magicCompact"];
+  return isRecord(magicCompact) && magicCompact["boundary"] === true;
 }
 
 function isToolResultRow(row: TranscriptRow): boolean {

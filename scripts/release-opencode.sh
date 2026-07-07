@@ -10,10 +10,12 @@ if [ -z "$version" ]; then
 fi
 
 case "$version" in
-  v*) tag="$version" ;;
-  *) tag="v$version" ;;
+  *[!0-9.]* | '' | *.*.*.* | .* | *.)
+    printf '%s\n' 'Version must be in X.Y.Z format.' >&2
+    exit 1
+    ;;
 esac
 
 cd packages/opencode-plugin
-npm version "$tag" --git-tag-version
+npm version "$version" --git-tag-version --tag-version-prefix='opencode@v'
 git push origin main --follow-tags

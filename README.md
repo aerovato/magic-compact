@@ -2,7 +2,7 @@
 
 English | [中文](./README.zh-CN.md)
 
-Lossless context compression mechanism for OpenCode.
+Lossless context compression for OpenCode and Claude Code.
 
 <p align="center">
   <img src=".github/assets/preview.png" alt="Magic Compact Preview" />
@@ -10,7 +10,7 @@ Lossless context compression mechanism for OpenCode.
 
 ## Why
 
-OpenCode's built-in compaction replaces an entire conversation with one summary blob. The user messages, the assistant's reasoning, tool calls, design decisions, and workflow are all flattened into a generic template (Goal, Progress, Key Decisions...). The agent wakes up with amnesia, forced to reconstruct its working state from an abstraction that captured a fraction of what mattered.
+OpenCode and Claude Code's built-in compaction replaces an entire conversation with one summary blob. The user messages, the assistant's reasoning, tool calls, design decisions, and workflow are all flattened into a generic template (Goal, Progress, Key Decisions...). The agent wakes up with amnesia, forced to reconstruct its working state from an abstraction that captured a fraction of what mattered.
 
 Magic Compact takes a different approach: preserve the conversation skeleton, condense each old assistant turn into its own summary, prune bulky tool I/O, and keep everything retrievable. The agent retains its memory of what it did, why, and what comes next.
 
@@ -33,6 +33,21 @@ The assistant's thought process, decisions, and actions remain in context along 
 - Recompactable — Run `/magic-compact` again later to compact new turns while preserving prior summaries.
 
 ## Installation
+
+Magic Compact works flawlessly on Claude Code, but OpenCode will have more features + first class support as OpenCode exposes more functionality to plugins.
+
+### Claude Code
+
+Install from this repository's first-party plugin marketplace:
+
+```shell
+/plugin marketplace add aeroato/magic-compact
+/plugin install claude-magic-compact@magic-compact
+```
+
+After installation, run `/reload-plugins` if Claude Code is already open.
+
+### OpenCode
 
 Install from the CLI:
 
@@ -59,7 +74,7 @@ Examples:
 - `/magic-compact` — summarize all old assistant turns.
 - `/magic-compact 3` — keep the 3 most recent assistant turns, summarize the rest.
 
-### `/magic-stats`
+### `/magic-stats` (OpenCode Exclusive)
 
 Run `/magic-stats` to show cumulative token savings for the current conversation: tokens pruned, cached tokens saved, estimated money saved, among other statistics.
 
@@ -68,6 +83,16 @@ Run `/magic-stats` to show cumulative token savings for the current conversation
 Magic Compact registers a `read_omitted_content` tool that the agent can call to retrieve any tool input or output that was pruned during compaction.
 
 Each omission notice in the conversation includes a Content ID (e.g. `omitted-001`). The agent uses that ID to fetch the original content when it needs stale information that cannot be reproduced via a new tool call.
+
+### Claude Code
+
+Claude Code does not expose as much capability to plugins vs OpenCode. Therefore, certain differences are present when using Magic Compact for Claude Code:
+
+- Magic Compact will create a compacted destintaion sesion instead of compacting in place.
+  - Claude Code does not allow us to modify the current session's message transcript
+- After compaction, Claude Code will tell you to run `/resume <new-session-id>` to enter the compacted session
+  - Simply copy and paste that command and run it
+- `/magic-stats` is not implemented for Claude Code
 
 ## Pruning Rules
 
@@ -99,7 +124,7 @@ Completed tool outputs over 128 words or 1024 characters are omitted by default.
 
 Pending, running, and errored tool calls are always preserved as-is.
 
-## Vs DCP Plugin
+## Vs DCP Plugin (OpenCode)
 
 OpenCode-DCP is a runtime context management system that rewrites messages when requested by the model. Magic Compact takes a different approach.
 
@@ -113,7 +138,7 @@ Magic Compact Offers:
 
 If you want model-driven compaction with increased cache invalidations and token burn, consider using DCP instead.
 
-## Vs Magic Context
+## Vs Magic Context (OpenCode)
 
 Magic Context is a much broader runtime context-management system: it runs background historian and dreamer processes, maintains project memory, and injects recalled memories and history back into the prompt on an ongoing basis. That makes it powerful, but also much heavier in tokens and cache churn.
 

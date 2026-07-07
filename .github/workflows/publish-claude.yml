@@ -1,9 +1,9 @@
-name: Publish Release
+name: Publish Claude Release
 
 on:
   push:
     tags:
-      - "v*"
+      - "claude@v*"
 
 permissions:
   id-token: write
@@ -29,9 +29,17 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - run: bun install --frozen-lockfile
-      - name: Publish OpenCode plugin
-        working-directory: packages/opencode-plugin
-        run: npm publish --provenance
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code@latest
+      - name: Validate Claude plugin
+        working-directory: packages/claude-code-plugin
+        run: claude plugin validate . --strict
+      - name: Check Claude npm package contents
+        working-directory: packages/claude-code-plugin
+        run: npm pack --dry-run
+      - name: Publish Claude plugin
+        working-directory: packages/claude-code-plugin
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes

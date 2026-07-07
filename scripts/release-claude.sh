@@ -16,7 +16,7 @@ case "$version" in
     ;;
 esac
 
-npm version "$version" --no-git-tag-version --workspace claude-magic-compact
+npm version "$version" --no-git-tag-version --prefix packages/claude-code-plugin
 
 node - "$version" <<'EOF'
 const fs = require("node:fs");

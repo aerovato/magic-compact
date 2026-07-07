@@ -1,14 +1,23 @@
 {
-  "name": "magic-compact-local",
+  "name": "magic-compact",
+  "description": "First-party Magic Compact plugins.",
   "owner": {
-    "name": "local"
+    "name": "kevinMEH"
   },
   "plugins": [
     {
-      "name": "magic-compact",
-      "source": "./packages/claude-code-plugin",
-      "description": "Local Magic Compact development plugin",
-      "version": "dev"
+      "name": "claude-magic-compact",
+      "source": {
+        "source": "npm",
+        "package": "claude-magic-compact",
+        "version": "1.0.0"
+      },
+      "description": "Lossless context compression for Claude Code.",
+      "homepage": "https://github.com/aerovato/magic-compact#readme",
+      "repository": "https://github.com/aerovato/magic-compact",
+      "author": {
+        "name": "kevinMEH"
+      }
     }
   ]
 }

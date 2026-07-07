@@ -1,7 +1,6 @@
 {
-  "name": "@magic-compact/claude-code-plugin",
+  "name": "claude-magic-compact",
   "version": "1.0.0",
-  "private": true,
   "description": "Magic Compact plugin for Claude Code.",
   "type": "module",
   "module": "src/index.ts",
@@ -11,10 +10,20 @@
       "import": "./src/index.ts"
     }
   },
+  "author": "kevinMEH",
+  "homepage": "https://github.com/aerovato/magic-compact#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aerovato/magic-compact.git"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.21.3"
   },
   "files": [
+    ".claude-plugin",
+    ".mcp.json",
+    "hooks",
+    "skills",
     "src"
   ]
 }

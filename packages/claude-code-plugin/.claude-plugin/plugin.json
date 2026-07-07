@@ -1,5 +1,10 @@
 {
-  "name": "magic-compact",
+  "name": "claude-magic-compact",
   "version": "1.0.0",
-  "description": "Lossless context compression for Claude Code."
+  "description": "Lossless context compression for Claude Code.",
+  "author": {
+    "name": "kevinMEH"
+  },
+  "homepage": "https://github.com/aerovato/magic-compact#readme",
+  "repository": "https://github.com/aerovato/magic-compact"
 }

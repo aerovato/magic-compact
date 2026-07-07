@@ -22,6 +22,8 @@
   "files": [
     ".claude-plugin",
     ".mcp.json",
+    "README.md",
+    "README.zh-CN.md",
     "hooks",
     "skills",
     "src"

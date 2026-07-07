@@ -29,6 +29,8 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - run: bun install --frozen-lockfile
+      - name: Copy package README files for publish
+        run: cp README.* packages/claude-code-plugin/
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code@latest
       - name: Validate Claude plugin

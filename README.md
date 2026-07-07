@@ -41,7 +41,7 @@ Magic Compact works flawlessly on Claude Code, but OpenCode will have more featu
 Install from this repository's first-party plugin marketplace:
 
 ```shell
-/plugin marketplace add aeroato/magic-compact
+/plugin marketplace add aerovato/magic-compact
 /plugin install claude-magic-compact@magic-compact
 ```
 

@@ -113,7 +113,9 @@ Removed or condensed:
 
 ### Tool I/O Rules
 
-Completed tool outputs over 128 words or 1024 characters are omitted by default. A few tools have special handling:
+Completed tool outputs over 128 words or 1024 characters are omitted by default. A few tools have special handling.
+
+#### OpenCode
 
 - `read` — output always omitted (stale file contents are reloadable)
 - `write` / `edit` / `apply_patch` — large file content omitted
@@ -121,6 +123,14 @@ Completed tool outputs over 128 words or 1024 characters are omitted by default.
 - `task` — output omitted above a higher threshold (512 words / 4096 characters)
 - `question` — input and output preserved
 - `todowrite` / `skill` — output discarded without caching (redundant or reloadable)
+
+#### Claude Code
+
+- `Read` / `NotebookEdit` — output always omitted (file text, notebook JSON, images, PDFs are reloadable)
+- `Bash.command` — commands over 512 characters truncated; full command cached with an omission ID
+- `Agent` / `TaskOutput` — output omitted above a higher threshold (512 words / 4096 characters)
+- `AskUserQuestion` — input and output preserved (captures explicit user decisions)
+- `Skill` — output discarded without caching (reloadable by re-invoking the skill)
 
 Pending, running, and errored tool calls are always preserved as-is.
 

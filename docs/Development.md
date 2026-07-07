@@ -53,6 +53,8 @@ bun install
 ### `docs/`
 
 - `docs/Development.md` - contributor setup and repository map.
+- `docs/OpenCode.md` - OpenCode runtime behavior specification.
+- `docs/ClaudeCode.md` - Claude Code runtime behavior specification.
 
 ## Common Commands
 

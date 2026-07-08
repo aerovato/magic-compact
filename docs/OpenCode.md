@@ -21,7 +21,7 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 7. Rename the backup to `[Backup] ${title} ${timestamp}` and write backup metadata.
 8. Measure pre-compaction tokens using provider tokens when available, otherwise local counting.
 9. Insert an ignored no-reply progress message.
-10. Create an ephemeral compaction session.
+10. Fork the source session into an ephemeral compaction session so the summarizer sees the full conversation.
 11. Send the XML summary prompt in the ephemeral session.
 12. Parse per-turn summaries.
 13. Delete the ephemeral session in cleanup.
@@ -62,6 +62,7 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 ## Summarization
 
 - Summaries are generated in an ephemeral session so the prompt and assistant stream stay out of the main session.
+- The ephemeral session is a fork of the source session: the summarizer needs the full conversation in context to summarize assistant turns faithfully.
 - The XML prompt is built from the OpenCode template.
 - The XML prompt includes only the turns being summarized and, when needed, the next user turn as the boundary marker.
 - User text in the prompt excludes synthetic and ignored text and is truncated to the first line or first 300 characters, whichever is shorter.

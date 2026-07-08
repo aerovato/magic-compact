@@ -37,17 +37,18 @@ async function generateSummariesInEphemeralSession(
   turns: Turn[],
   nextTurn: Turn | null,
 ): Promise<string[]> {
+  // Fork the source session so the summarizer sees the full conversation it
+  // is asked to summarize. A freshly created session has no history: the
+  // model would only receive the truncated user lines embedded in the
+  // template and could not produce faithful per-turn summaries.
   const compactionSession = unwrap(
-    await v2.session.create({
+    await v2.session.fork({ sessionID: session.id }),
+  );
+
+  unwrap(
+    await v2.session.update({
+      sessionID: compactionSession.id,
       title: `[TEMP] ${session.title}`,
-      agent: session.agent,
-      model: session.model
-        ? {
-            id: session.model.id,
-            providerID: session.model.providerID,
-            variant: session.model.variant,
-          }
-        : undefined,
     }),
   );
 

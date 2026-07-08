@@ -463,6 +463,7 @@ ${getUserPromptText(turn)}
 <user>
 ${getUserPromptText(nextTurn)}
 </user>
+[**Do not add an <assistant> summary for the final <user> above; it marks where summarization stops and the template ends here.**]
 `.trim(),
     );
   }
@@ -491,12 +492,29 @@ function parseSummaries(responseText: string, expectedCount: number): string[] {
   }
 
   const summary = responseText.slice(start, end + "</summary>".length);
-  const matches = [
-    ...summary.matchAll(/<assistant>([\s\S]*?)<\/assistant>/g),
-  ].map(match => match[1]!.trim());
+  // Models regularly append one unrequested summary for the trailing
+  // next-turn <user> anchor. Pairing each echoed <user> with its following
+  // <assistant> and taking the first expectedCount pairs ignores that extra
+  // block while still failing loudly on a true miss.
+  const segments = [
+    ...summary.matchAll(/<(user|assistant)>([\s\S]*?)<\/\1>/g),
+  ].map(match => ({ tag: match[1]!, text: match[2]!.trim() }));
+  const matches: string[] = [];
+  for (
+    let index = 0;
+    index < segments.length && matches.length < expectedCount;
+    index++
+  ) {
+    const current = segments[index]!;
+    const next = segments[index + 1];
+    if (current.tag === "user" && next?.tag === "assistant") {
+      matches.push(next.text);
+      index++;
+    }
+  }
   if (matches.length !== expectedCount) {
     throw new Error(
-      `Expected ${expectedCount} summaries, received ${matches.length}.`,
+      `Expected ${expectedCount} summaries, received ${matches.length} user/assistant pairs.`,
     );
   }
   return matches;

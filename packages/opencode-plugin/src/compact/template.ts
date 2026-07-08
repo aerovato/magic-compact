@@ -67,6 +67,7 @@ ${getUserPromptText(turn)}
 <user>
 ${getUserPromptText(nextTurn)}
 </user>
+[**Do not add an <assistant> summary for the final <user> above; it marks where summarization stops and the template ends here.**]
 `.trim(),
     );
   }

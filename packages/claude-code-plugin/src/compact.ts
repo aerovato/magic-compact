@@ -23,6 +23,7 @@ type Plan = {
 const POST_COMPACTION_NOTICE = `<post-compaction-notice>
 A compaction operation has just been applied to all messages above. You may have to reread certain files to regain context. Certain historical tool input/output may have been omitted due to length. If the exact I/O of the tool call needs to be retrieved and functionality cannot be replicated via a new tool call, call the read_omitted_content tool with the appropriate Content ID to reread the tool I/O content.
 </post-compaction-notice>`;
+const SYNTHETIC_MODEL = "<synthetic>";
 
 export async function compactTranscript(
   sourceTranscriptPath: string,
@@ -40,6 +41,7 @@ export async function compactTranscript(
     sourceTranscriptPath,
     plan.summarizedTurns,
     plan.preservedTurns[0] ?? null,
+    latestAssistantModel(rows),
   );
   const compactedRows = await buildCompactedRows(plan, summaries, sessionId);
   const metadataEntries = await readPreservedMetadataEntries(
@@ -84,18 +86,28 @@ async function generateSummaries(
   transcriptPath: string,
   turns: Turn[],
   nextTurn: Turn | null,
+  model: string | null,
 ): Promise<string[]> {
   const analysis = await copyTranscriptToNewSession(transcriptPath);
   const prompt = buildCompactionPrompt(turns, nextTurn);
+  const args = [
+    "claude",
+    "-p",
+    "--resume",
+    analysis.transcriptPath,
+    "--settings",
+    JSON.stringify({ disableAllHooks: true }),
+  ];
+  if (model !== null) {
+    args.push("--model", model);
+  }
+  args.push(prompt);
 
   try {
-    const summaryProcess = Bun.spawn(
-      ["claude", "-p", "--resume", analysis.transcriptPath, prompt],
-      {
-        stdout: "pipe",
-        stderr: "pipe",
-      },
-    );
+    const summaryProcess = Bun.spawn(args, {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
     const [stdout, stderr, exitCode] = await Promise.all([
       new Response(summaryProcess.stdout).text(),
       new Response(summaryProcess.stderr).text(),
@@ -110,6 +122,24 @@ async function generateSummaries(
   } finally {
     await unlink(analysis.transcriptPath).catch(() => undefined);
   }
+}
+
+function latestAssistantModel(rows: TranscriptRow[]): string | null {
+  for (const row of rows.toReversed()) {
+    if (row.type !== "assistant" || !isRecord(row.message)) {
+      continue;
+    }
+
+    const model = row.message["model"];
+    if (
+      typeof model === "string"
+      && model !== ""
+      && model !== SYNTHETIC_MODEL
+    ) {
+      return model;
+    }
+  }
+  return null;
 }
 
 async function buildCompactedRows(

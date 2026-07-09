@@ -57,7 +57,7 @@ To enter the compacted session, run the following command:
 4. Build assistant turns from that active chain.
 5. Stop early and delete the destination transcript if nothing is eligible.
 6. Copy the current transcript to a temporary analysis session.
-7. Run `claude -p --resume <analysis-session-id> <prompt>` to generate per-turn summaries.
+7. Run `claude -p --resume <analysis-session-id> --settings '{"disableAllHooks":true}' [--model <latest-assistant-model>] <prompt>` to generate per-turn summaries.
 8. Parse the XML summaries.
 9. Delete the temporary analysis transcript.
 10. Preserve safe session metadata rows in the destination transcript.
@@ -109,6 +109,8 @@ This differs from OpenCode, where the recompaction boundary is a user text part 
 
 - The summary prompt is aligned with OpenCode's XML template.
 - Summary generation runs in a temporary analysis copy using `claude -p --resume`.
+- Summary generation disables hooks so user hooks cannot extend or rewrite the XML-only response.
+- Summary generation pins `--model` to the latest real assistant `message.model` from the active transcript when available; if no model can be reliably read, no model override is passed.
 - The prompt and summary generation stream do not appear in the original session.
 - The generated XML must contain one `<assistant>` summary for each summarized turn.
 - Each summarized turn is rebuilt with original user rows, one synthetic assistant summary row, and selected tool rows.

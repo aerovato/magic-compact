@@ -45,14 +45,14 @@ async function generateSummariesInEphemeralSession(
     await v2.session.fork({ sessionID: session.id }),
   );
 
-  unwrap(
-    await v2.session.update({
-      sessionID: compactionSession.id,
-      title: `[TEMP] ${session.title}`,
-    }),
-  );
-
   try {
+    unwrap(
+      await v2.session.update({
+        sessionID: compactionSession.id,
+        title: `[TEMP] ${session.title}`,
+      }),
+    );
+
     return await generateSummaries(v2, compactionSession.id, turns, nextTurn);
   } finally {
     unwrap(

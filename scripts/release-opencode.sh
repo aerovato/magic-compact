@@ -16,6 +16,9 @@ case "$version" in
     ;;
 esac
 
-cd packages/opencode-plugin
-npm version "$version" --git-tag-version --tag-version-prefix='opencode@v'
-git push origin main --follow-tags
+npm version "$version" --no-git-tag-version --workspaces=false --prefix packages/opencode-plugin
+
+git add "packages/opencode-plugin/package.json"
+git commit -m "opencode@v$version"
+git tag "opencode@v$version"
+git push origin main "opencode@v$version"

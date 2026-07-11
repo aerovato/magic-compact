@@ -52,9 +52,11 @@ After installation, run `/reload-plugins` if Claude Code is already open.
 Install from the CLI:
 
 ```bash
+rm -rf ~/.cache/opencode/packages/magic-compact*
+
 opencode plugin magic-compact --global
 
-# If you are encountering "No versions available:
+# If you are encountering "No versions available":
 NPM_CONFIG_MIN_RELEASE_AGE=0 opencode plugin magic-compact --global
 ```
 

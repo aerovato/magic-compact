@@ -54,9 +54,11 @@ Magic Compact 在 Claude Code 上运行完美,但 OpenCode 会有更多功能 + 
 从 CLI 安装:
 
 ```bash
+rm -rf ~/.cache/opencode/packages/magic-compact*
+
 opencode plugin magic-compact --global
 
-# If you are encountering "No versions available:
+# If you are encountering "No versions available":
 NPM_CONFIG_MIN_RELEASE_AGE=0 opencode plugin magic-compact --global
 ```
 

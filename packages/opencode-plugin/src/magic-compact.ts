@@ -15,7 +15,7 @@ import {
 } from "./compact/session";
 import { createCompactionPlan } from "./compact/plan";
 import { pruneSummarizedTurns } from "./compact/prune";
-import { countSessionTokens, getProviderTokens } from "./stats/tokenize";
+import { countSessionTokens } from "./stats/tokenize";
 
 export const COMPACT_SUCCESS = "Magic compaction successful.";
 export const COMPACT_NOOP = "No assistant turns are old enough to compact.";
@@ -54,9 +54,19 @@ export async function executeMagicCompact(
       currentCompactionCount,
     );
 
-    const beforeTokens =
-      (await getProviderTokens(v2, sessionID))
-      ?? (await countSessionTokens(v2, sessionID));
+    // beforeTokens and afterTokens MUST use the same measurement method.
+    // getProviderTokens reads message.info.tokens, a field the provider sets
+    // once, at generation time, on a specific past assistant message — it is
+    // never updated by pruning and is also what OpenCode's own "used Xk"
+    // sidebar indicator reads. Mixing it with a local re-estimate for
+    // afterTokens produced a stats notice ("X -> Y tokens") whose two sides
+    // came from unrelated data sources, so the printed reduction had no
+    // reliable relationship to what the sidebar showed next. Using
+    // countSessionTokens for both keeps the comparison internally
+    // consistent, at the cost of it not matching the sidebar's own number
+    // (which cannot reflect this compaction until the next real completion
+    // call regardless of how beforeTokens is computed).
+    const beforeTokens = await countSessionTokens(v2, sessionID);
 
     const progressMessageID = await injectProgressNotice(v2, sessionID);
     let compacted;

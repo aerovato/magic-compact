@@ -45,6 +45,7 @@ Magic Compaction #${compactionCount}
 Compaction Stats   | ${formatTokenCount(beforeTokens)} → ${formatTokenCount(afterTokens)} tokens (${percent}% reduced) | ~${formatTokenCount(savedTokens)} tokens pruned
 Conversation Stats | Total tokens pruned: ~${formatTokenCount(stats.totalTokensPruned)} | Total cache reads saved: ~${formatTokenCount(stats.cachedTokensSaved)} tokens
 Cost Savings       | ${moneySaved}
+Note: this is an estimate of the reduced conversation; OpenCode's context/"used" indicator updates on your next message, not immediately.
 `.trim();
 }
 

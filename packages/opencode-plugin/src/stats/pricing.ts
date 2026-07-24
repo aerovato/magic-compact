@@ -27,6 +27,10 @@ const CACHED_READ_PRICES: Record<string, string> = {
   "gpt-5.4-mini": "0.075",
   "gpt-5.4-nano": "0.02",
   "gpt-5.5": "0.5",
+  "gpt-5.6": "0.5",
+  "gpt-5.6-sol": "0.5",
+  "gpt-5.6-terra": "0.25",
+  "gpt-5.6-luna": "0.1",
   o1: "7.5",
   o3: "0.5",
   "o3-mini": "0.55",
@@ -55,6 +59,7 @@ const CACHED_READ_PRICES: Record<string, string> = {
   "grok-4.20-0309-reasoning": "0.2",
   "grok-4.20-multi-agent-0309": "0.2",
   "grok-4.3": "0.2",
+  "grok-4.5": "0.3",
   "grok-build-0.1": "0.2",
 
   // Moonshot (Kimi)
@@ -67,6 +72,7 @@ const CACHED_READ_PRICES: Record<string, string> = {
   "kimi-k2.6": "0.16",
   "kimi-k2.7-code": "0.19",
   "kimi-k2.7-code-highspeed": "0.38",
+  "kimi-k3": "0.3",
 
   // MiMo
   "mimo-v2-flash": "0.0028",

@@ -24,6 +24,7 @@ Magic Compact performs per-turn conversation compaction while preserving the con
 ### Runtime Surfaces
 
 - `/magic-compact [N]` slash command.
+- `/magic-trim [N]` slash command (OpenCode exclusive).
 - `/magic-stats` slash command (OpenCode exclusive).
 - `read_omitted_content` tool.
 

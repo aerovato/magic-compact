@@ -10,6 +10,7 @@ Compress a conversation without flattening it into a single generic recap.
 
 - `/magic-compact [N]` compacts the current conversation in place.
 - `N` keeps the most recent assistant turns unchanged. Default: `0`.
+- We also provide `/magic-trim [N]`, which applies tool I/O trimming without summarizing assistant turns.
 - The plugin creates a backup before mutating the conversation.
 - User messages are preserved exactly.
 - Older assistant turns are summarized turn-by-turn, not merged into one blob.

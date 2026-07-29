@@ -33,6 +33,7 @@ Magic Compact 不会把整段会话折叠成一个通用摘要,而是用高保�
 - 保留用户消息 — 确切的需求和指导逐字保留,助手始终可见。
 - 智能工具调用修剪 — 臃肿的已完成工具 I/O 被替换为省略提示,原始内容会被缓存,可通过 `read_omitted_content` 按需检索。
 - 可重新压缩 — 之后再次运行 `/magic-compact` 可压缩新的回合,同时保留之前的摘要。
+- 仅修剪而不摘要 — OpenCode 可通过 `/magic-trim` 修剪历史工具 I/O,同时保留助手回复。
 
 ## 安装
 
@@ -78,13 +79,27 @@ NPM_CONFIG_MIN_RELEASE_AGE=0 opencode plugin magic-compact --global
 - `/magic-compact` — 摘要所有旧的助手回合。
 - `/magic-compact 3` — 保留最近 3 个助手回合,其余摘要。
 
+### `/magic-trim`(OpenCode 专属) (实验性)
+
+运行 `/magic-trim [N]` 可应用相同的工具 I/O 修剪规则,但不会摘要或删除普通用户与助手内容。
+
+- `N` 表示保留工具 I/O 的最近助手回合数。默认值为 `0`(修剪所有符合条件的回合)。
+- 修剪不会调用 LLM,也不会创建压缩边界。
+- 修剪前会创建备份会话。
+- 减少的 token 会计入 `/magic-stats`。
+
+示例:
+
+- `/magic-trim` — 修剪整个会话中符合条件的工具 I/O。
+- `/magic-trim 3` — 保留最近 3 个助手回合中的工具 I/O。
+
 ### `/magic-stats`(OpenCode 专属)
 
 运行 `/magic-stats` 显示当前对话累计的 token 节省:修剪的 token、节省的缓存 token、估算节省的金额,以及其他统计信息。
 
 ### 省略内容工具
 
-Magic Compact 注册了一个 `read_omitted_content` 工具,助手可以调用它来检索压缩期间被修剪的任何工具输入或输出。
+Magic Compact 注册了一个 `read_omitted_content` 工具,助手可以调用它来检索压缩或修剪期间被省略的任何工具输入或输出。
 
 对话中的每个省略提示都包含一个 Content ID(例如 `omitted-001`)。助手在需要无法通过新工具调用重现的旧信息时,会使用该 ID 获取原始内容。
 
@@ -100,7 +115,7 @@ Claude Code 向插件暴露的能力不如 OpenCode 多。因此,在 Claude Code
 
 ## 修剪规则
 
-修剪仅适用于被摘要的回合。
+执行 `/magic-compact` 时,修剪仅适用于被摘要的回合。在 OpenCode 上,`/magic-trim [N]` 仅对保留尾部之外的回合应用工具 I/O 规则。
 
 保留:
 
@@ -137,6 +152,8 @@ Claude Code 向插件暴露的能力不如 OpenCode 多。因此,在 Claude Code
 - `Skill` — 输出被丢弃且不缓存(可通过重新调用 skill 重新加载)
 
 待处理、运行中和出错的工具调用总是原样保留。
+
+修剪期间处理过的已完成工具调用会被标记,因此后续修剪或压缩操作不会再次修剪它们。
 
 ## 与 DCP 插件对比(OpenCode)
 

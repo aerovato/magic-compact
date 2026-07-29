@@ -5,10 +5,11 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 ## Commands
 
 - `/magic-compact [N]` backs up and compacts the current OpenCode session in place.
+- `/magic-trim [N]` backs up and trims historical tool I/O without summarizing messages.
 - `/magic-stats` injects an ignored stats notice for the current session.
 - `read_omitted_content` is registered as an OpenCode plugin tool.
 
-`/magic-compact` accepts only a non-negative integer argument. `/magic-stats` accepts no arguments. Command handlers throw success, no-op, or validation messages so OpenCode does not continue sending the slash command to the LLM.
+`/magic-compact` and `/magic-trim` accept only a non-negative integer argument. `/magic-stats` accepts no arguments. Command handlers throw success, no-op, or validation messages so OpenCode does not continue sending the slash command to the LLM.
 
 ## Compaction Flow
 
@@ -34,13 +35,32 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 20. Update stats and inject an ignored stats notice.
 21. Show a success toast.
 
+## Trim Flow (Experimental)
+
+1. Parse `N`; default is `0`.
+2. Build turns for the complete stored session, independent of compaction boundaries.
+3. Preserve the `N` most recent assistant turns.
+4. Load the source session and fork it as a backup.
+5. Copy omission and stats caches to the backup.
+6. Measure pre-trim tokens using local counting.
+7. Apply the normal tool input and output trimming rules to older turns.
+8. Mark processed completed tool states with `state.metadata.magicCompact.trimmed === true`.
+9. Stop with a no-op toast if no tool states were processed.
+10. Measure post-trim tokens and add the reduction to conversation stats.
+11. Inject an ignored trim stats notice and show a success toast.
+
+`/magic-trim` does not call an LLM, generate summaries, modify ordinary user or assistant content, insert a compaction boundary, or increment `compactionCount`.
+
+Known issues: We do not check for noops.
+
 ## Backup Sessions
 
 - Backup title: `[Backup] ${title} ${timestamp}`.
 - The main session title stays unchanged on success.
 - Backup metadata stores `sourceSessionId`, `compactedAt`, and `compactionCount`.
 - The backup receives copies of omission and stats caches before mutation.
-- If compaction fails after backup creation, the backup is renamed back to the original title, the original session is deleted, and OpenCode selects the backup session.
+- Trim backups preserve the source session's current `compactionCount`.
+- If compaction or trimming fails after backup creation, the backup is renamed back to the original title, the original session is deleted, and OpenCode selects the backup session.
 
 ## Turn Selection
 
@@ -51,6 +71,8 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 - A trailing user-only turn does not count against `N`.
 - Only turns with assistant messages are summarized.
 - `N` preserves the most recent assistant turns in the current uncompacted range.
+- For `/magic-trim`, `N` preserves tool I/O in the most recent assistant turns across the complete session.
+- Trim selection does not use compaction boundaries.
 
 ## Recompaction
 
@@ -86,6 +108,7 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 - IDs are session-local sequential IDs: `omitted-001`, `omitted-002`, ...
 - The current session cache is the active cache on success.
 - The backup gets a cache copy before mutation.
+- Compaction and trimming share the same session-local omission sequence.
 
 ## Omission Retrieval
 
@@ -100,6 +123,7 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 - Stats cache format version is `1`.
 - Stats track `rootSessionId`, `sourceSessionId`, `totalTokensPruned`, `cachedTokensSaved`, and processed assistant message IDs.
 - Each compaction adds the current token reduction to `totalTokensPruned`.
+- Each trim adds its locally counted token reduction to `totalTokensPruned`.
 - OpenCode assistant message events add `totalTokensPruned` to `cachedTokensSaved` once per assistant message after stats exist.
 - `/magic-stats` injects an ignored stats summary notice, or a no-stats message if no stats exist.
 
@@ -111,6 +135,8 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 - Other assistant parts are deleted.
 - Assistant messages with no remaining parts are deleted.
 - Only completed tool parts are pruned; pending, running, and error states are preserved.
+- `/magic-trim` applies only the tool rules below; it does not delete other user or assistant parts.
+- Processed tool states are marked as trimmed, and later trim or compaction operations skip them.
 
 ## Tool Rules
 

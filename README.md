@@ -31,6 +31,7 @@ The assistant's thought process, decisions, and actions remain in context along 
 - Preserved user messages — Exact requirements and guidance remain visible to the agent, verbatim.
 - Smart tool call pruning — Bulky completed tool I/O is replaced with omission notices, with original content cached and retrievable on demand via `read_omitted_content`.
 - Recompactable — Run `/magic-compact` again later to compact new turns while preserving prior summaries.
+- Trim without summarizing — OpenCode can prune historical tool I/O with `/magic-trim` while preserving assistant responses.
 
 ## Installation
 
@@ -76,13 +77,27 @@ Examples:
 - `/magic-compact` — summarize all old assistant turns.
 - `/magic-compact 3` — keep the 3 most recent assistant turns, summarize the rest.
 
+### `/magic-trim` (OpenCode Exclusive) (Experimental)
+
+Run `/magic-trim [N]` to apply the same tool I/O pruning rules without summarizing or deleting ordinary user and assistant content.
+
+- `N` preserves tool I/O in the most recent assistant turns. Default: `0` (trim all eligible turns).
+- Trimming does not call an LLM or create a compaction boundary.
+- A backup session is created before trimming.
+- Token reductions are included in `/magic-stats`.
+
+Examples:
+
+- `/magic-trim` — trim eligible tool I/O throughout the session.
+- `/magic-trim 3` — preserve tool I/O in the 3 most recent assistant turns.
+
 ### `/magic-stats` (OpenCode Exclusive)
 
 Run `/magic-stats` to show cumulative token savings for the current conversation: tokens pruned, cached tokens saved, estimated money saved, among other statistics.
 
 ### The Omitted Content Tool
 
-Magic Compact registers a `read_omitted_content` tool that the agent can call to retrieve any tool input or output that was pruned during compaction.
+Magic Compact registers a `read_omitted_content` tool that the agent can call to retrieve any tool input or output that was pruned during compaction or trimming.
 
 Each omission notice in the conversation includes a Content ID (e.g. `omitted-001`). The agent uses that ID to fetch the original content when it needs stale information that cannot be reproduced via a new tool call.
 
@@ -98,7 +113,7 @@ Claude Code does not expose as much capability to plugins vs OpenCode. Therefore
 
 ## Pruning Rules
 
-Pruning applies only to summarized turns.
+During `/magic-compact`, pruning applies only to summarized turns. On OpenCode, `/magic-trim [N]` applies only the tool I/O rules to turns outside the preserved tail.
 
 Kept:
 
@@ -135,6 +150,8 @@ Completed tool outputs over 128 words or 1024 characters are omitted by default.
 - `Skill` — output discarded without caching (reloadable by re-invoking the skill)
 
 Pending, running, and errored tool calls are always preserved as-is.
+
+Completed tool calls processed by pruning are marked so later trim and compaction operations do not trim them again.
 
 ## Vs DCP Plugin (OpenCode)
 

@@ -22,6 +22,7 @@ bun install
   - `src/api.ts` - OpenCode API access helpers.
   - `src/index.ts` - package export surface.
   - `src/magic-compact.ts` - `/magic-compact` command entrypoint.
+  - `src/magic-trim.ts` - `/magic-trim` command entrypoint.
   - `src/magic-stats.ts` - `/magic-stats` command entrypoint.
   - `src/tui.ts` - TUI plugin wiring.
   - `src/util.ts` - shared local utilities.
@@ -38,6 +39,7 @@ bun install
   - `src/stats/events.ts` - stats event accounting.
   - `src/stats/pricing.ts` - pricing calculations.
   - `src/stats/tokenize.ts` - token estimation helpers.
+  - `test/trim.test.ts` - trim planning and metadata idempotency tests.
 - `packages/claude-code-plugin` - Claude Code plugin implementation for the port.
   - `src/command.ts` - Claude Code slash command entrypoint.
   - `src/compact.ts` - Claude Code compaction flow.

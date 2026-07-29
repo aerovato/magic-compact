@@ -14,7 +14,7 @@ export async function executeMagicStats(
   const compactionCount = getCompactionCount(session);
   const text = stats
     ? statsSummaryMessage(compactionCount, stats, session.model?.id ?? null)
-    : "No Magic Compact stats recorded for this session. Did you run /magic-compact yet?";
+    : "No Magic Compact stats recorded for this session. Did you run /magic-compact or /magic-trim yet?";
 
   unwrap(
     await v2.session.prompt({

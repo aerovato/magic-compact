@@ -17,11 +17,54 @@ export type CompactionPlan = {
   nextTurn: Turn | null;
 };
 
+export type TrimPlan = {
+  trimmedTurns: Turn[];
+};
+
 export async function createCompactionPlan(
   v2: V2Client,
   sessionID: string,
   keepTurns: number,
 ): Promise<CompactionPlan> {
+  const turns = await loadTurns(v2, sessionID);
+
+  const boundaryTurnIndex = turns.findLastIndex(turn =>
+    turn.user.some(msg => msg.parts.some(isBoundaryPart)),
+  );
+  const compactionStartIndex = boundaryTurnIndex === -1 ? 0 : boundaryTurnIndex;
+
+  removeTrailingAssistantlessTurn(turns);
+
+  const compactionEndIndex =
+    keepTurns <= 0
+      ? turns.length
+      : Math.max(compactionStartIndex, turns.length - keepTurns);
+
+  const summarizedTurns = turns.slice(compactionStartIndex, compactionEndIndex);
+
+  const nextTurn = turns[compactionEndIndex] ?? null;
+
+  return {
+    summarizedTurns,
+    nextTurn,
+  };
+}
+
+export async function createTrimPlan(
+  v2: V2Client,
+  sessionID: string,
+  keepTurns: number,
+): Promise<TrimPlan> {
+  const turns = await loadTurns(v2, sessionID);
+  removeTrailingAssistantlessTurn(turns);
+  const trimEndIndex = Math.max(0, turns.length - keepTurns);
+
+  return {
+    trimmedTurns: turns.slice(0, trimEndIndex),
+  };
+}
+
+async function loadTurns(v2: V2Client, sessionID: string): Promise<Turn[]> {
   const messages: MessageWithParts[] = unwrap(
     await v2.session.messages({
       sessionID,
@@ -48,30 +91,15 @@ export async function createCompactionPlan(
     }
   }
 
-  const boundaryTurnIndex = turns.findLastIndex(turn =>
-    turn.user.some(msg => msg.parts.some(isBoundaryPart)),
-  );
-  const compactionStartIndex = boundaryTurnIndex === -1 ? 0 : boundaryTurnIndex;
+  return turns;
+}
 
+function removeTrailingAssistantlessTurn(turns: Turn[]): void {
   const lastTurn = turns.at(-1);
   if (lastTurn && lastTurn.assistants.length === 0) {
     // Last turn may consist of noReply user messages, and should not count as a real "turn"
     turns.pop();
   }
-
-  const compactionEndIndex =
-    keepTurns <= 0
-      ? turns.length
-      : Math.max(compactionStartIndex, turns.length - keepTurns);
-
-  const summarizedTurns = turns.slice(compactionStartIndex, compactionEndIndex);
-
-  const nextTurn = turns[compactionEndIndex] ?? null;
-
-  return {
-    summarizedTurns,
-    nextTurn,
-  };
 }
 
 function isBoundaryPart(part: Part): boolean {

@@ -8,8 +8,8 @@ import {
   getCompactionCount,
   injectPostCompactionNotice,
   injectProgressNotice,
-  injectStatsNotice,
-  recordCompactionStats,
+  injectCompactStatsNotice,
+  recordPruningStats,
   reloadTurns,
   updateCompactionMetadata,
 } from "./compact/session";
@@ -81,13 +81,13 @@ export async function executeMagicCompact(
 
     await updateCompactionMetadata(v2, sourceSession, currentCompactionCount);
     const afterTokens = await countSessionTokens(v2, sessionID);
-    const stats = await recordCompactionStats({
+    const stats = await recordPruningStats({
       sessionID,
       sourceSessionID: sessionID,
-      tokensPrunedThisCompaction: beforeTokens - afterTokens,
+      tokensPruned: beforeTokens - afterTokens,
     });
 
-    await injectStatsNotice(
+    await injectCompactStatsNotice(
       v2,
       sessionID,
       beforeTokens,

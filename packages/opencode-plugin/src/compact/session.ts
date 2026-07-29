@@ -9,7 +9,11 @@ import type { MessageWithParts, Turn } from "./plan";
 import { copyCache } from "../storage/omission";
 import type { ConversationStats } from "../storage/stats";
 import { copyStats, writeStats } from "../storage/stats";
-import { STATS_METADATA, statsMessage } from "../stats/constants";
+import {
+  STATS_METADATA,
+  statsMessage,
+  trimStatsMessage,
+} from "../stats/constants";
 
 export type MagicCompactMetadata = {
   sourceSessionId: string;
@@ -197,23 +201,23 @@ export async function injectPostCompactionNotice(
   );
 }
 
-export async function recordCompactionStats(input: {
+export async function recordPruningStats(input: {
   sessionID: string;
   sourceSessionID: string;
-  tokensPrunedThisCompaction: number;
+  tokensPruned: number;
 }): Promise<ConversationStats> {
   const stats = await copyStats(input.sourceSessionID, input.sessionID);
   const nextStats = {
     ...stats,
     totalTokensPruned:
-      stats.totalTokensPruned + Math.max(0, input.tokensPrunedThisCompaction),
+      stats.totalTokensPruned + Math.max(0, input.tokensPruned),
   };
 
   await writeStats(input.sessionID, nextStats);
   return nextStats;
 }
 
-export async function injectStatsNotice(
+export async function injectCompactStatsNotice(
   v2: V2Client,
   sessionID: string,
   beforeTokens: number,
@@ -236,6 +240,30 @@ export async function injectStatsNotice(
             stats,
             modelID,
           ),
+          ignored: true,
+          metadata: STATS_METADATA,
+        },
+      ],
+    }),
+  );
+}
+
+export async function injectTrimStatsNotice(
+  v2: V2Client,
+  sessionID: string,
+  beforeTokens: number,
+  afterTokens: number,
+  stats: ConversationStats,
+  modelID: string | null,
+): Promise<void> {
+  unwrap(
+    await v2.session.prompt({
+      sessionID,
+      noReply: true,
+      parts: [
+        {
+          type: "text",
+          text: trimStatsMessage(beforeTokens, afterTokens, stats, modelID),
           ignored: true,
           metadata: STATS_METADATA,
         },

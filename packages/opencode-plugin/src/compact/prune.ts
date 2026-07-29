@@ -1,9 +1,6 @@
 import type { Part, ToolPart } from "@opencode-ai/sdk/v2";
 import { unwrap, type V2Client } from "../api";
-import {
-  inputOmissionNotice,
-  outputOmissionNotice,
-} from "./constants";
+import { inputOmissionNotice, outputOmissionNotice } from "./constants";
 import type { MessageWithParts, Turn } from "./plan";
 import { allocateOmission } from "../storage/omission";
 import { isRecord, unwrapString } from "../util";
@@ -32,6 +29,23 @@ export async function pruneSummarizedTurns(
       await pruneAssistantParts(context, assistant);
     }
   }
+}
+
+export async function trimToolParts(
+  context: PruneContext,
+  turns: Turn[],
+): Promise<number> {
+  let trimmed = 0;
+  for (const turn of turns) {
+    for (const assistant of turn.assistants) {
+      for (const part of assistant.parts) {
+        if (part.type === "tool" && (await pruneToolPart(context, part))) {
+          trimmed += 1;
+        }
+      }
+    }
+  }
+  return trimmed;
 }
 
 async function pruneUserParts(
@@ -103,9 +117,13 @@ async function pruneAssistantParts(
 async function pruneToolPart(
   context: PruneContext,
   part: ToolPart,
-): Promise<void> {
+): Promise<boolean> {
   if (part.state.status !== "completed") {
-    return;
+    return false;
+  }
+  const magicCompact = part.state.metadata["magicCompact"];
+  if (isRecord(magicCompact) && magicCompact["trimmed"] === true) {
+    return false;
   }
 
   const inputNotice = await applyInputOmissions(context, part);
@@ -114,6 +132,14 @@ async function pruneToolPart(
   if (inputNotice) {
     part.state.output = `${inputNotice}\n\n${part.state.output}`;
   }
+
+  part.state.metadata = {
+    ...part.state.metadata,
+    magicCompact: {
+      ...(isRecord(magicCompact) ? magicCompact : {}),
+      trimmed: true,
+    },
+  };
 
   unwrap(
     await context.v2.part.update({
@@ -126,6 +152,7 @@ async function pruneToolPart(
       },
     }),
   );
+  return true;
 }
 
 async function applyInputOmissions(

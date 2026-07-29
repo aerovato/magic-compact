@@ -7,10 +7,12 @@ import {
   executeMagicCompact,
 } from "./magic-compact";
 import { STATS_SUCCESS, executeMagicStats } from "./magic-stats";
+import { TRIM_NOOP, TRIM_SUCCESS, executeMagicTrim } from "./magic-trim";
 import { readOmittedContent } from "./storage/omission";
 import { handleStatsEvent } from "./stats/events";
 
 const COMPACT_COMMAND = "magic-compact";
+const TRIM_COMMAND = "magic-trim";
 const STATS_COMMAND = "magic-stats";
 
 const server: Plugin = async input => {
@@ -25,6 +27,10 @@ const server: Plugin = async input => {
         template: "",
         description: "Show Magic Compact token and cost savings stats",
       };
+      config.command[TRIM_COMMAND] = {
+        template: "",
+        description: "Trim historical tool inputs and outputs",
+      };
     },
     "command.execute.before": async command => {
       if (command.command === STATS_COMMAND) {
@@ -36,26 +42,39 @@ const server: Plugin = async input => {
         throw new Error(STATS_SUCCESS);
       }
 
-      if (command.command !== COMPACT_COMMAND) {
-        return;
-      }
+      if (command.command === COMPACT_COMMAND) {
+        const trimmed = command.arguments.trim();
+        if (!/^\d*$/.test(trimmed)) {
+          throw new Error(
+            "/magic-compact argument must be a non-negative integer.",
+          );
+        }
+        const keepTurns = trimmed ? Number(trimmed) : 0;
 
-      const trimmed = command.arguments.trim();
-      if (!/^\d*$/.test(trimmed)) {
-        throw new Error(
-          "/magic-compact argument must be a non-negative integer.",
+        const compacted = await executeMagicCompact(
+          getV2Client(input),
+          command.sessionID,
+          keepTurns,
         );
+        // Must throw error or OpenCode will send message to LLM
+        throw new Error(compacted ? COMPACT_SUCCESS : COMPACT_NOOP);
       }
-      const keepTurns = trimmed ? Number(trimmed) : 0;
 
-      const compacted = await executeMagicCompact(
-        getV2Client(input),
-        command.sessionID,
-        keepTurns,
-      );
-
-      // Must throw error or OpenCode will send message to LLM
-      throw new Error(compacted ? COMPACT_SUCCESS : COMPACT_NOOP);
+      if (command.command === TRIM_COMMAND) {
+        const trimmed = command.arguments.trim();
+        if (!/^\d*$/.test(trimmed)) {
+          throw new Error(
+            "/magic-trim argument must be a non-negative integer.",
+          );
+        }
+        const keepTurns = trimmed ? Number(trimmed) : 0;
+        const didTrim = await executeMagicTrim(
+          getV2Client(input),
+          command.sessionID,
+          keepTurns,
+        );
+        throw new Error(didTrim ? TRIM_SUCCESS : TRIM_NOOP);
+      }
     },
     event: async input => {
       await handleStatsEvent(input.event);
@@ -63,7 +82,7 @@ const server: Plugin = async input => {
     tool: {
       read_omitted_content: tool({
         description:
-          "Read original tool input or output content omitted by context compaction operations. Note that this tool reads the snapshot of previously executed tool I/O back in time and contents should be expected to be stale. Only use this tool if you strictly require stale input or output content information from previously completed tool calls AND similar information cannot be obtained via new tool calls.",
+          "Read original tool input or output content omitted by context compaction or trimming operations. Note that this tool reads the snapshot of previously executed tool I/O back in time and contents should be expected to be stale. Only use this tool if you strictly require stale input or output content information from previously completed tool calls AND similar information cannot be obtained via new tool calls.",
         args: {
           contentId: tool.schema
             .string()

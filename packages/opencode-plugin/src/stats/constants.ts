@@ -35,7 +35,7 @@ export function statsMessage(
   stats: ConversationStats,
   modelID: string | null,
 ): string {
-  const savedTokens = beforeTokens - afterTokens;
+  const savedTokens = Math.max(0, beforeTokens - afterTokens);
   const percent =
     beforeTokens > 0 ? Math.round((savedTokens / beforeTokens) * 100) : 0;
   const moneySaved = moneySavedMessage(stats, modelID);
@@ -43,6 +43,25 @@ export function statsMessage(
   return `
 Magic Compaction #${compactionCount}
 Compaction Stats   | ${formatTokenCount(beforeTokens)} → ${formatTokenCount(afterTokens)} tokens (${percent}% reduced) | ~${formatTokenCount(savedTokens)} tokens pruned
+Conversation Stats | Total tokens pruned: ~${formatTokenCount(stats.totalTokensPruned)} | Total cache reads saved: ~${formatTokenCount(stats.cachedTokensSaved)} tokens
+Cost Savings       | ${moneySaved}
+`.trim();
+}
+
+export function trimStatsMessage(
+  beforeTokens: number,
+  afterTokens: number,
+  stats: ConversationStats,
+  modelID: string | null,
+): string {
+  const savedTokens = Math.max(0, beforeTokens - afterTokens);
+  const percent =
+    beforeTokens > 0 ? Math.round((savedTokens / beforeTokens) * 100) : 0;
+  const moneySaved = moneySavedMessage(stats, modelID);
+
+  return `
+Magic Trim
+Trim Stats         | ${formatTokenCount(beforeTokens)} → ${formatTokenCount(afterTokens)} tokens (${percent}% reduced) | ~${formatTokenCount(savedTokens)} tokens pruned
 Conversation Stats | Total tokens pruned: ~${formatTokenCount(stats.totalTokensPruned)} | Total cache reads saved: ~${formatTokenCount(stats.cachedTokensSaved)} tokens
 Cost Savings       | ${moneySaved}
 `.trim();

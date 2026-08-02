@@ -50,10 +50,17 @@ async function generateSummariesInEphemeralSession(
       await v2.session.update({
         sessionID: compactionSession.id,
         title: `[TEMP] ${session.title}`,
+        ...(session.permission ? { permission: session.permission } : {}),
       }),
     );
 
-    return await generateSummaries(v2, compactionSession.id, turns, nextTurn);
+    return await generateSummaries(
+      v2,
+      compactionSession.id,
+      session,
+      turns,
+      nextTurn,
+    );
   } finally {
     unwrap(
       await v2.session.delete({
@@ -66,12 +73,24 @@ async function generateSummariesInEphemeralSession(
 async function generateSummaries(
   v2: V2Client,
   sessionID: string,
+  sourceSession: Session,
   turns: Turn[],
   nextTurn: Turn | null,
 ): Promise<string[]> {
+  const variant = sourceSession.model?.variant;
   const response = unwrap(
     await v2.session.prompt({
       sessionID,
+      ...(sourceSession.agent ? { agent: sourceSession.agent } : {}),
+      ...(sourceSession.model
+        ? {
+            model: {
+              providerID: sourceSession.model.providerID,
+              modelID: sourceSession.model.id,
+            },
+          }
+        : {}),
+      ...(variant && variant !== "default" ? { variant } : {}),
       parts: [
         {
           type: "text",

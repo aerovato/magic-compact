@@ -72,6 +72,7 @@ async function generateSummaries(
   const response = unwrap(
     await v2.session.prompt({
       sessionID,
+      agent: "compaction",
       parts: [
         {
           type: "text",

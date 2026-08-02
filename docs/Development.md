@@ -39,6 +39,7 @@ bun install
   - `src/stats/events.ts` - stats event accounting.
   - `src/stats/pricing.ts` - pricing calculations.
   - `src/stats/tokenize.ts` - token estimation helpers.
+  - `test/compact.test.ts` - compaction prompt-agent and ephemeral-session lifecycle tests.
   - `test/trim.test.ts` - trim planning and metadata idempotency tests.
 - `packages/claude-code-plugin` - Claude Code plugin implementation for the port.
   - `src/command.ts` - Claude Code slash command entrypoint.

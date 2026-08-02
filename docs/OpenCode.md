@@ -23,7 +23,7 @@ OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](
 8. Measure pre-compaction tokens using provider tokens when available, otherwise local counting.
 9. Insert an ignored no-reply progress message.
 10. Fork the source session into an ephemeral compaction session so the summarizer sees the full conversation.
-11. Send the XML summary prompt in the ephemeral session.
+11. Send the XML summary prompt in the ephemeral session using OpenCode's hidden `compaction` agent.
 12. Parse per-turn summaries.
 13. Delete the ephemeral session in cleanup.
 14. Delete the progress message in cleanup.
@@ -85,7 +85,10 @@ Known issues: We do not check for noops.
 
 - Summaries are generated in an ephemeral session so the prompt and assistant stream stay out of the main session.
 - The ephemeral session is a fork of the source session: the summarizer needs the full conversation in context to summarize assistant turns faithfully.
+- Summary generation is an ordinary `session.prompt()` request that explicitly selects OpenCode's hidden `compaction` agent. It is not OpenCode's native `session.compact()` operation.
+- OpenCode applies the `compaction` agent's configured model, prompt, options, and permissions. When that agent has no configured model, model selection falls through OpenCode's normal prompt resolution.
 - The XML prompt is built from the OpenCode template.
+- The Magic Compact XML request and response contract remains authoritative even when the `compaction` agent has a configured prompt.
 - The XML prompt includes only the turns being summarized and, when needed, the next user turn as the boundary marker.
 - User text in the prompt excludes synthetic and ignored text and is truncated to the first line or first 300 characters, whichever is shorter.
 - The generated XML must contain one `<assistant>` summary for each summarized turn.
@@ -154,6 +157,7 @@ Known issues: We do not check for noops.
 ## Error Handling
 
 - Any LLM, XML, SDK, cache, stats, token counting, or pruning failure aborts the attempt.
+- If the `compaction` agent is disabled or missing, the prompt failure aborts the attempt without falling back to another agent.
 - Cleanup deletes the ephemeral session and progress message when they exist.
 - If a backup exists, it is promoted back.
 - A failure toast is shown.

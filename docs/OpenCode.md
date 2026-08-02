@@ -85,6 +85,7 @@ Known issues: We do not check for noops.
 
 - Summaries are generated in an ephemeral session so the prompt and assistant stream stay out of the main session.
 - The ephemeral session is a fork of the source session: the summarizer needs the full conversation in context to summarize assistant turns faithfully.
+- The model and prompt prefix must remain unchanged for cache reuse: the ephemeral request should use the same model, agent-controlled system prompt, and tool set as the source session.
 - The XML prompt is built from the OpenCode template.
 - The XML prompt includes only the turns being summarized and, when needed, the next user turn as the boundary marker.
 - User text in the prompt excludes synthetic and ignored text and is truncated to the first line or first 300 characters, whichever is shorter.

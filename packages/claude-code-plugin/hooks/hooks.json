@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun ${CLAUDE_PLUGIN_ROOT}/src/hook.ts",
+            "command": "bun \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\"",
             "timeout": 150,
             "statusMessage": "Running Magic Compact"
           }

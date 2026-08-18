@@ -1,6 +1,6 @@
 # OpenCode Behavior Specification
 
-OpenCode-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](Core.md).
+OpenCode-specific runtime behavior. Shared plugin behavior lives in [`operator.md`](../operator.md).
 
 ## Commands
 
@@ -120,13 +120,38 @@ Known issues: We do not check for noops.
 
 ## Stats
 
-- Stats are stored under `${XDG_DATA_HOME:-~/.local/share}/opencode/storage/magic-compact/stats/{sessionId}.json`.
+- Stats are stored under `{dataDir}/magic-compact/stats/{sessionId}.json`.
 - Stats cache format version is `1`.
-- Stats track `rootSessionId`, `sourceSessionId`, `totalTokensPruned`, `cachedTokensSaved`, and processed assistant message IDs.
-- Each compaction adds the current token reduction to `totalTokensPruned`.
-- Each trim adds its locally counted token reduction to `totalTokensPruned`.
-- OpenCode assistant message events add `totalTokensPruned` to `cachedTokensSaved` once per assistant message after stats exist.
-- `/magic-stats` injects an ignored stats summary notice, or a no-stats message if no stats exist.
+- Each file stores `rootSessionId`, `sourceSessionId`, cumulative counters, and processed assistant message IDs.
+
+### Tracked Metrics
+
+- `totalTokensPruned` — cumulative tokens removed by compactions and trims.
+- `cachedTokensSaved` — cumulative avoided cached-read tokens. On each completed assistant provider turn, add the current `totalTokensPruned`.
+- `moneySaved` — computed at display time from `cachedTokensSaved` and the active model's cached-read price.
+
+### Token Counting
+
+- `countSessionTokens` counts persisted message part tokens locally plus estimated system prompt overhead.
+- The system prompt estimate uses the first assistant message with provider usage and the first user message text.
+- `getProviderTokens` reads provider-reported usage from the latest assistant message when available.
+
+### Accounting
+
+- Compaction: measure `beforeTokens` and `afterTokens` on the current session; add `max(0, beforeTokens - afterTokens)` to `totalTokensPruned`.
+- Trim: count locally on the current session; add the reduction to `totalTokensPruned`. Trimming does not increment `compactionCount`.
+- Real-time: a `message.updated` event hook watches for completed assistant messages; for each, add `totalTokensPruned` to `cachedTokensSaved`, deduplicated by assistant message ID.
+
+### Pricing
+
+- A static model-price mapping powers the money estimate.
+- If the active model has no price entry, the money estimate is omitted.
+
+### Notices
+
+- After each compaction, OpenCode injects an ignored stats notice with compaction count, this-run savings, totals, and estimated money saved.
+- After each trim, OpenCode injects an ignored trim stats notice with this-run savings, totals, and estimated money saved.
+- `/magic-stats` injects the same cumulative summary on demand, or a no-stats message if no stats exist.
 
 ## Pruning
 

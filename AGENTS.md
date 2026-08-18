@@ -1,38 +1,23 @@
-# Project
+# Magic Compact — Agent Instructions
 
-Magic Compact is a lossless context compression plugin for OpenCode and Claude Code. See `README.md` for the user-facing overview, features, installation, source map, and pruning rules.
+This project uses [Operator Memory](https://github.com/aerovato/operator-memory) for durable, agent-maintained documentation (instructions, specs, codebase index).
 
-This file is the development reference for agents working on this repo.
+- Shared instructions: `.operator-shared/operator.md`
+- Shared Project Index (codebase map): `.operator-shared/index/index.md`
 
----
+If you are an agent or contributor working in this repository, installing Operator Memory is strongly recommended to develop effectively.
 
-## Development Docs
+To install:
 
-Agents MUST read these files before working on platform behavior, and MUST update them whenever behavior changes:
+```
+# With NPM
+npm install --global @aerovato/operator-helper
 
-- `docs/Development.md` — setup, repository layout, and maintenance commands.
-- `docs/Core.md` — shared, platform-independent behavior and safety guarantees.
-- `docs/OpenCode.md` — **Read if working on OpenCode plugin**: OpenCode runtime behavior specification.
-- `docs/ClaudeCode.md` — **Read if working on Claude Code plugin**: Claude Code runtime behavior specification.
+# With Bun
+bun add --global --minimum-release-age 0 @aerovato/operator-helper@latest
 
----
+# Install OpenCode plugin
+operator-helper install opencode
+```
 
-## Architecture
-
-Magic Compact performs per-turn conversation compaction while preserving the conversation skeleton.
-
-### Runtime Surfaces
-
-- `/magic-compact [N]` slash command.
-- `/magic-trim [N]` slash command (OpenCode exclusive).
-- `/magic-stats` slash command (OpenCode exclusive).
-- `read_omitted_content` tool.
-
-### Goals
-
-- Preserve the current conversation structure while reducing context size.
-- Preserve user messages exactly.
-- Replace old assistant turns with local per-turn summaries.
-- Keep useful tool calls visible while removing bulky tool I/O.
-- Store omitted tool I/O outside context but make it retrievable.
-- Keep a recovery path available on failure.
+Without Operator installed, read the files listed above manually before making changes.

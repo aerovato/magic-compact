@@ -1,6 +1,6 @@
 # Claude Code Behavior Specification
 
-Claude Code-specific runtime behavior. Shared plugin behavior lives in [`Core.md`](Core.md). Tool pruning rules live in [`Pruning.md`](../internal/Specs/ClaudeCode/Pruning.md).
+Claude Code-specific runtime behavior. Shared plugin behavior lives in [`operator.md`](../operator.md). Tool I/O pruning rules live in [`claude-code-pruning.md`](claude-code-pruning.md).
 
 ## Commands
 

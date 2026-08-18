@@ -2,6 +2,9 @@
 
 [English](./README.md) | 中文
 
+> [!IMPORTANT]
+> Magic Compact 的开发已暂停，后续将由其继任者 [Operator Memory](https://github.com/aerovato/operator-memory) 承接。Magic Compact 专注于上下文压缩；Operator 已提供持久化记忆和文档能力，并将逐步加入上下文管理功能。请安装并关注 Operator，以获取后续更新。
+
 (注：AI翻译)
 
 OpenCode 和 Claude Code 的无损上下文压缩。
@@ -9,6 +12,8 @@ OpenCode 和 Claude Code 的无损上下文压缩。
 <p align="center">
   <img src=".github/assets/preview.png" alt="Magic Compact Preview" />
 </p>
+
+> ##### 使用 [Operator Memory](https://github.com/aerovato/operator-memory) 构建
 
 ## 为什么需要
 
@@ -185,4 +190,8 @@ Magic Compact 提供:
 
 ## 开发
 
-请查看 [`docs/Development.md`](./docs/Development.md) 了解安装和常用维护命令。
+请查看 [`.operator-shared/operator.md`](./.operator-shared/operator.md) 了解安装和常用维护命令。
+
+## 使用 Operator 构建
+
+此仓库使用 [Operator Memory](https://github.com/aerovato/operator-memory) 维护。它是一套由 AI 代理维护的持久化文档系统，让 AI 代理能在不同会话间带着完整项目上下文继续工作。公开的项目记忆位于 [`.operator-shared/`](.operator-shared/)。

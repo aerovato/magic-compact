@@ -2,11 +2,16 @@
 
 English | [中文](./README.zh-CN.md)
 
+> [!IMPORTANT]
+> Magic Compact development has been paused in favor of [Operator Memory](https://github.com/aerovato/operator-memory), its successor. Magic Compact focuses on context compression; Operator already provides durable memory and documentation, and will gain context-management features over time. Install and follow Operator for future development.
+
 Lossless context compression for OpenCode and Claude Code.
 
 <p align="center">
   <img src=".github/assets/preview.png" alt="Magic Compact Preview" />
 </p>
+
+> ##### Built with [Operator Memory](https://github.com/aerovato/operator-memory)
 
 ## Why
 
@@ -183,4 +188,8 @@ If you want a lightweight, user-driven compaction tool with minimal ongoing over
 
 ## Development
 
-See [`docs/Development.md`](./docs/Development.md) for setup and maintenance commands.
+See [`.operator-shared/operator.md`](./.operator-shared/operator.md) for setup and maintenance commands.
+
+## Built with Operator
+
+This repository is maintained with [Operator Memory](https://github.com/aerovato/operator-memory) — durable, agent-maintained documentation that lets AI agents work on the project with full context across sessions. The published brain lives in [`.operator-shared/`](.operator-shared/).
